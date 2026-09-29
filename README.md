@@ -17,6 +17,9 @@ $0.01 payment, so an agent's $0.01 nets us $0.00984.) An agent payment below the
 minimum is settled and then failed, and since the portals have no usable recovery address it is
 unrecoverable, so never run this service against a broadcaster with a higher minimum.
 
+For agent authors: [Paying for a lookup as an agent](docs/paying-as-an-agent.md) walks through the
+flow with two validated scripts, `pnpm agent` (SDK payer) and `pnpm agent:raw` (fetch + viem only).
+
 ## How the agent rail works
 
 The whole merchant side is one object from the SDK, `createX402Merchant` in `src/x402.ts`,

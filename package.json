@@ -11,7 +11,9 @@
     "keys": "tsx src/scripts/gen-signer.ts",
     "test:e2e": "tsx --env-file-if-exists=.env test/e2e-local.ts",
     "test:checkout-side": "tsx --env-file-if-exists=.env test/checkout-side.ts",
-    "test:x402": "tsx --env-file-if-exists=.env test/x402-agent.ts"
+    "test:x402": "tsx --env-file-if-exists=.env test/x402-agent.ts",
+    "agent": "tsx examples/agent.ts",
+    "agent:raw": "tsx examples/agent-raw.ts"
   },
   "dependencies": {
     "@0xcurvy/payments-sdk": "0.1.1",
