@@ -1,0 +1,6 @@
+node_modules
+.env
+.env.*
+!.env.example
+# internal integration notes, not part of the public repo
+FRICTION.md
