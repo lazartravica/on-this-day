@@ -102,7 +102,7 @@ Two schemes exist:
 | Scheme | How you pay | Needs |
 | --- | --- | --- |
 | `curvy-transfer` | Send a plain ERC-20 `transfer(payTo, amount)` yourself and present the transaction hash | A wallet with the token and gas |
-| `exact` | Sign an EIP-3009 `TransferWithAuthorization`; an x402 facilitator submits it and pays gas | The service must have a facilitator configured; any standard x402 client such as `@x402/fetch` speaks it |
+| `exact` | Sign an EIP-3009 `TransferWithAuthorization`; Curvy's x402 facilitator submits it and pays gas | Any standard x402 client such as `@x402/fetch` speaks it |
 
 The live demo offers `curvy-transfer` only. `createX402Payer` handles both: give it `send` for
 `curvy-transfer`, `signer` for `exact`, or both, and it prefers `exact` when offered.

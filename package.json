@@ -16,7 +16,7 @@
     "agent:raw": "tsx examples/agent-raw.ts"
   },
   "dependencies": {
-    "@0xcurvy/payments-sdk": "0.1.1",
+    "@0xcurvy/payments-sdk": "0.1.2",
     "@0xcurvy/rs-core-wasm": "0.1.0-rc.4",
     "@hono/node-server": "^2.1.1",
     "hono": "^4.13.8",

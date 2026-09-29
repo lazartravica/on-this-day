@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@0xcurvy/payments-sdk':
-        specifier: 0.1.1
-        version: 0.1.1(@0xcurvy/rs-core-wasm@0.1.0-rc.4)(typescript@7.0.2)
+        specifier: 0.1.2
+        version: 0.1.2(@0xcurvy/rs-core-wasm@0.1.0-rc.4)(typescript@7.0.2)
       '@0xcurvy/rs-core-wasm':
         specifier: 0.1.0-rc.4
         version: 0.1.0-rc.4
@@ -36,8 +36,8 @@ importers:
 
 packages:
 
-  '@0xcurvy/payments-sdk@0.1.1':
-    resolution: {integrity: sha512-gMYtXjNjkOCUPPJdE5aWtFN1Es0o0SDJ0m42vJawS5S3/8iL4FiD7blt5Yh8DXSBuj+DZPEsMYUEMFNJoCDJjA==}
+  '@0xcurvy/payments-sdk@0.1.2':
+    resolution: {integrity: sha512-qqo+KOhUiVboLYazqfe9YXWKKLhrcwl0UsqCbpo4/UnD3cd1x5DO5AQrnyjwZrQF6HfRA0p+5sy8gM22/mkiWA==}
     engines: {node: '>=22.16'}
     peerDependencies:
       '@0xcurvy/rs-core-wasm': 0.1.0-rc.4
@@ -434,7 +434,7 @@ packages:
 
 snapshots:
 
-  '@0xcurvy/payments-sdk@0.1.1(@0xcurvy/rs-core-wasm@0.1.0-rc.4)(typescript@7.0.2)':
+  '@0xcurvy/payments-sdk@0.1.2(@0xcurvy/rs-core-wasm@0.1.0-rc.4)(typescript@7.0.2)':
     dependencies:
       viem: 2.56.8(typescript@7.0.2)
     optionalDependencies:

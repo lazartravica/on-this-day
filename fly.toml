@@ -1,4 +1,5 @@
-# Public demo on Fly.io: Ethereum Sepolia, Curvy production broadcaster, $0.50 per lookup.
+# Public demo on Fly.io: Ethereum Sepolia, Curvy's production broadcaster and facilitator (the SDK's
+# defaults, https://api.curvy.box and https://api.curvy.box/portal/x402), $0.50 per lookup.
 # Secrets (fly secrets set): CURVY_PUBLIC_S, CURVY_PUBLIC_V, CURVY_PUBLIC_BABYJUBJUB, MERCHANT_SIGNER_PRIVATE_KEY
 app = "on-this-day-x402"
 primary_region = "fra"
@@ -12,14 +13,13 @@ primary_region = "fra"
   CHAIN_ID = "11155111"
   RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com"
   CONFIRMATIONS = "2"
-  # From GET https://api3.curvy.box/portal/networks/11155111 (pinned; the SDK checks the broadcaster against it).
+  # From GET https://api.curvy.box/portal/networks/11155111 (pinned; the SDK checks the broadcaster against it).
   CURVY_AGGREGATOR = "0x5d4a04d6c9bdf4613e7acd92e570539a5a6dba84"
   # Circle's Sepolia USDC (6 decimals, EIP-3009), vault token id 2.
   PAYMENT_TOKEN = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238"
   # The broadcaster fails portals under $0.50 after the payer has paid, so a lookup costs $0.50 here.
   PRICE_PER_LOOKUP_BASE_UNITS = "500000"
   LOOKUPS_PER_PURCHASE = "1"
-  CURVY_BROADCASTER_URL = "https://api3.curvy.box"
   CURVY_CHECKOUT_ORIGIN = "https://app3.curvy.box/checkout"
   MERCHANT_SIGNER_NOT_AFTER = "2027-01-01T00:00:00.000Z"
 

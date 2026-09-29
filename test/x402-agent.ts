@@ -49,7 +49,7 @@ const required = decodePaymentRequired(unpaid.headers.get(PAYMENT_REQUIRED_HEADE
 const [offer] = required.accepts;
 assert.ok(offer, "402 must offer a payment option");
 const token = getAddress(offer.asset);
-// `exact` leads when the service has a facilitator configured; the local stack has none.
+// `exact` leads: the broadcaster serves Curvy's facilitator, which the SDK uses by default.
 assert.ok(["exact", "curvy-transfer"].includes(offer.scheme), `unexpected scheme ${offer.scheme}`);
 assert.equal(offer.amount, PRICE.toString());
 const body = await unpaid.json();
@@ -77,7 +77,7 @@ const sendTransfer = ({ token: t, to, amount }: { token: `0x${string}`; to: `0x$
     functionName: "transfer",
     args: [to, amount],
   });
-// Prefers `exact` when the service has a facilitator configured, otherwise pays by plain transfer.
+// Prefers `exact` when the service offers it, otherwise pays by plain transfer.
 const payer = createX402Payer({
   signer: account,
   send: sendTransfer,

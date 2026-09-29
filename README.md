@@ -5,17 +5,17 @@ A small service that tells you what happened on a given date. Every lookup costs
 
 | Who pays | Rail | How |
 | --- | --- | --- |
-| An AI agent or script | **x402** | `GET /api/on-this-day?date=MM-DD` answers `402` with a `PAYMENT-REQUIRED` header offering `curvy-transfer` (send the $0.01 to the one-time portal yourself) and, when `X402_FACILITATOR_URL` names any x402 facilitator such as Coinbase's, `exact` (sign one $0.01 EIP-3009 authorization, gasless). Curvy's portal broadcaster shields either into our note; Curvy runs no facilitator. **True $0.01 per call.** |
+| An AI agent or script | **x402** | `GET /api/on-this-day?date=MM-DD` answers `402` with a `PAYMENT-REQUIRED` header offering `exact` (sign one $0.01 EIP-3009 authorization; Curvy's x402 facilitator submits it, gasless for you) and `curvy-transfer` (send the $0.01 to the one-time portal yourself). Curvy's portal broadcaster shields either into our note. **True $0.01 per call.** |
 | A human in a browser | **Human checkout**, prepaid bundle | The same `402` body carries a signed Curvy `checkoutUrl`. One checkout buys `LOOKUPS_PER_PURCHASE` lookups (default 100 = $1.00); each call then spends one $0.01 credit. |
 
-Both rails are shielded by Curvy's portal broadcaster, whose `PORTAL_MIN_USD_VALUE` (0.5 by
-default) fails any portal worth less, after the payer has already paid, with
-`Portal don't have enough funds to be bridged`. For this service that value must be at most
-$0.01; the demo stack sets 0.001. Humans still prepay bundles because checkout is a
-per-payment browser round trip. (On-chain fees are tiny: on the local devenv 160 base units on a
-$0.01 payment, so an agent's $0.01 nets us $0.00984.) An agent payment below the broadcaster's
-minimum is settled and then failed, and since the portals have no usable recovery address it is
-unrecoverable, so never run this service against a broadcaster with a higher minimum.
+Both rails are shielded by Curvy's portal broadcaster, whose USD minimum per portal (0.50 in
+production, reported as `minPortalUsd` by `GET /portal/networks/:chainId`) fails any portal
+worth less, after the payer has already paid. A true $0.01 price therefore needs a broadcaster
+with a lower minimum (Curvy's internal dev stack sets 0.001); the public demo charges $0.50.
+Humans still prepay bundles because checkout is a per-payment browser round trip. (On-chain fees
+are tiny: about 160 base units on a $0.01 payment, so an agent's $0.01 nets us $0.00984.) An agent
+payment below the broadcaster's minimum is settled and then failed, and since the portals have no
+usable recovery address it is unrecoverable, so never price below the broadcaster's minimum.
 
 For agent authors: [Paying for a lookup as an agent](docs/paying-as-an-agent.md) walks through the
 flow with two validated scripts, `pnpm agent` (SDK payer) and `pnpm agent:raw` (fetch + viem only).
@@ -46,13 +46,14 @@ Portals are derived with no usable recovery address (`NO_RECOVERY_ADDRESS`): fun
 a portal the broadcaster never shields, because the payer fails screening, underpays, or sends
 the wrong token, are lost for good. The 402 terms should say so.
 
-If the facilitator or the RPC is unreachable, agents get no x402 offer but the human rail keeps
-working. Agent retries never create a checkout bundle, and expired unpaid bundles are pruned.
+If the facilitator is unreachable the service offers `curvy-transfer` alone; if the RPC is
+unreachable, agents get no x402 offer but the human rail keeps working. Agent retries never create a checkout bundle, and expired unpaid bundles are pruned.
 
-An agent needs no Curvy code: any wallet that can send a transfer works for `curvy-transfer`,
-and any x402 v2 client works for `exact` when a facilitator is configured. `test/x402-agent.ts`
-uses the SDK's `createX402Payer` for both. Contract addresses come from the broadcaster
-(`GET /portal/networks/:chainId`); the aggregator is pinned in `src/x402.ts`.
+An agent needs no Curvy code: any x402 v2 client (for example `@x402/fetch`) pays `exact`, and any
+wallet that can send a transfer works for `curvy-transfer`. `test/x402-agent.ts` uses the SDK's
+`createX402Payer` for both. The broadcaster (`https://api.curvy.box`) and the facilitator it serves
+(`https://api.curvy.box/portal/x402`) are the SDK's defaults; contract addresses come from the
+broadcaster (`GET /portal/networks/:chainId`) and the aggregator is pinned in `src/x402.ts`.
 
 ## How the human rail works
 
@@ -84,50 +85,50 @@ archived events return 404 and are never charged.
 
 ## Running locally
 
-```bash
-# 1. Curvy local stack (needs Foundry's anvil on PATH), then the payments demo stack in a
-#    second terminal: portal broadcaster :4035 (PORTAL_MIN_USD_VALUE=0.001), checkout :4032
-cd ../../curvy-monorepo && pnpm run dev:quick
-cd ../../curvy-monorepo && pnpm demo:payments
+The service runs against Curvy's production stack on the Ethereum Sepolia testnet out of the box;
+`.env.example` carries those values, so nobody pays with real money.
 
-# 2. This service
+```bash
 pnpm install
 cp .env.example .env
 pnpm keys                # prints throwaway dev receiving keys + signer; paste into .env
-# CURVY_CHECKOUT_ORIGIN: the demo checkout is http://127.0.0.1:4032/ (pnpm demo:payments)
-# CURVY_BROADCASTER_URL: the demo broadcaster is http://127.0.0.1:4035 (same stack; the default)
-# X402_FACILITATOR_URL: optional. The local stack runs no facilitator, so agents pay by
-#   `curvy-transfer`; set any x402 v2 facilitator to also offer `exact`.
+# CURVY_CHECKOUT_ORIGIN: the hosted checkout page for the human rail (Curvy provides it at onboarding);
+#   leave it empty to run the agent rail only.
 # If `pnpm dev` refuses to run (ERR_PNPM_IGNORED_BUILDS), use ./node_modules/.bin/tsx --env-file=.env src/server.ts
 pnpm dev
 ```
 
+To charge a true $0.01 you need a broadcaster whose minimum allows it; point `CURVY_BROADCASTER_URL`
+(and, if it is not served by that broadcaster, `X402_FACILITATOR_URL`) at it. `X402_FACILITATOR_URL=none`
+offers `curvy-transfer` only.
+
 ## Public demo (Fly.io, Ethereum Sepolia)
 
 A live instance runs at **<https://on-this-day-x402.fly.dev>** against Curvy's production portal
-broadcaster on the Ethereum Sepolia testnet, so nobody pays with real money. `fly.toml` holds
-the whole non-secret configuration:
+broadcaster and x402 facilitator on the Ethereum Sepolia testnet, so nobody pays with real money.
+`fly.toml` holds the whole non-secret configuration:
 
 | Setting | Value |
 | --- | --- |
 | Chain | Ethereum Sepolia (`11155111`) |
 | Token | Circle's Sepolia USDC `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` (6 decimals) |
-| Portal broadcaster | `https://api3.curvy.box` (serves `GET /portal/networks/11155111`) |
+| Portal broadcaster | `https://api.curvy.box` (the SDK default; serves `GET /portal/networks/11155111`) |
+| x402 facilitator | `https://api.curvy.box/portal/x402` (the SDK default; settles `exact`) |
 | Aggregator | `0x5d4a04d6c9bdf4613e7acd92e570539a5a6dba84`, pinned in `CURVY_AGGREGATOR` |
 | Price | **$0.50** per lookup (`PRICE_PER_LOOKUP_BASE_UNITS=500000`), one lookup per checkout |
 
-The price is $0.50 rather than $0.01 because the production broadcaster's `PORTAL_MIN_USD_VALUE`
-is 0.5, and a portal funded below it is failed after the agent has paid, unrecoverably. Get
+The price is $0.50 rather than $0.01 because the production broadcaster's minimum per portal is
+USD 0.50, and a portal funded below it is failed after the agent has paid, unrecoverably. Get
 Sepolia USDC from [Circle's faucet](https://faucet.circle.com/) and pay a lookup as an agent:
 
 ```bash
 curl -i "https://on-this-day-x402.fly.dev/api/on-this-day?date=07-20"   # 402 + PAYMENT-REQUIRED
 AGENT_KEY=0x… BASE=https://on-this-day-x402.fly.dev RPC_URL=https://ethereum-sepolia-rpc.publicnode.com \
-  CURVY_BROADCASTER_URL=https://api3.curvy.box pnpm test:x402                # pays by curvy-transfer
+  pnpm test:x402                                                            # pays exact, then curvy-transfer
 ```
 
-`CURVY_CHECKOUT_ORIGIN` points at `https://app3.curvy.box/checkout`; Curvy does not yet document
-its hosted checkout page, so treat the human rail on the demo as unverified and use the agent rail.
+`CURVY_CHECKOUT_ORIGIN` points at `https://app3.curvy.box/checkout`; Curvy's hosted checkout page is
+not public yet, so treat the human rail on the demo as unverified and use the agent rail.
 
 To run your own copy:
 
@@ -145,14 +146,13 @@ fly deploy --ha=false                        # one machine: payments are in memo
 minting the devnet token). It checks the 402, the paid 200 with `PAYMENT-RESPONSE`, that a
 replayed `PAYMENT-SIGNATURE` is refused, and that the merchant's record reaches
 `confirmed` with `netAmount` equal to gross minus the on-chain fees read from the vault.
-It needs the portal broadcaster on `:4035` from `pnpm demo:payments` (which sets
-`PORTAL_MIN_USD_VALUE=0.001`) and reads the vault address from it. No facilitator is needed: it
-pays by `curvy-transfer`, and uses `exact` only when the service has `X402_FACILITATOR_URL` set.
-Knobs: `BASE`, `RPC_URL`, `CURVY_BROADCASTER_URL`, `AGENT_KEY`. If the demo e2e has time-warped
-Anvil, the test dates its authorization from the chain clock.
+It needs a broadcaster whose minimum allows $0.01 (Curvy's internal dev stack on `:4035`) and reads
+the vault address from it. It pays `exact` through the facilitator that broadcaster serves and then
+`curvy-transfer`. Knobs: `BASE`, `RPC_URL`, `CURVY_BROADCASTER_URL`, `AGENT_KEY`. If the chain clock
+is skewed, the test dates its authorization from the chain clock.
 
-`pnpm test:e2e` pays for real on the local stack. It needs `pnpm demo:payments` running
-(buyer driver :4034, broadcaster :4035) and stands in for the hosted checkout page:
+`pnpm test:e2e` pays for real on Curvy's internal dev stack (buyer driver :4034, broadcaster :4035)
+and stands in for the hosted checkout page:
 it pays the portal, waits for the shield, and then drives both confirmation paths
 (API bearer and browser cookie + return page). It also checks that a tx hash from one
 payment can't unlock another and that a bundle buys exactly N lookups. The e2e needs a
@@ -167,4 +167,4 @@ pnpm test:checkout-side   # decode + verifyPaymentIntent the way Curvy checkout 
 
 The service is in-memory: payments are lost on restart.
 
-The service depends on [`@0xcurvy/payments-sdk`](https://www.npmjs.com/package/@0xcurvy/payments-sdk) 0.1.1 from npm.
+The service depends on [`@0xcurvy/payments-sdk`](https://www.npmjs.com/package/@0xcurvy/payments-sdk) 0.1.2 from npm. Docs: [x402 and the Payments SDK](https://docs.curvy.box/sdk/payments/x402).

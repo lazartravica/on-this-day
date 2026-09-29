@@ -19,12 +19,16 @@ export const config = {
   aggregatorAddress: required("CURVY_AGGREGATOR") as Address,
   checkoutOrigin: required("CURVY_CHECKOUT_ORIGIN"),
   // Curvy's portal broadcaster shields agent payments (the same service as for human checkout) and
-  // tells the SDK the contract addresses. Its PORTAL_MIN_USD_VALUE must be at most the price: lower
-  // payments are settled and then failed, unrecoverably.
-  broadcasterUrl: process.env.CURVY_BROADCASTER_URL ?? "http://127.0.0.1:4035",
-  // Optional: any x402 v2 facilitator (for example Coinbase's) to also offer the gasless `exact` scheme.
-  // Without it agents pay by plain transfer (`curvy-transfer`). The local stack runs none.
-  facilitatorUrl: process.env.X402_FACILITATOR_URL,
+  // tells the SDK the contract addresses. Unset: the SDK's default, Curvy's production broadcaster
+  // (https://api.curvy.box). Its USD minimum per portal must be at most the price: lower payments
+  // are settled and then failed, unrecoverably.
+  broadcasterUrl: process.env.CURVY_BROADCASTER_URL || undefined,
+  // The x402 facilitator that settles the gasless `exact` scheme. Unset: the SDK's default, Curvy's
+  // facilitator served by the broadcaster in use (`<broadcaster>/portal/x402`). Any x402 v2
+  // facilitator URL overrides it; `none` offers `curvy-transfer` only.
+  facilitator: (process.env.X402_FACILITATOR_URL === "none"
+    ? false
+    : process.env.X402_FACILITATOR_URL || undefined) as string | false | undefined,
 
   // Each lookup costs $0.01 (10_000 base units of a 6-decimal USD stablecoin).
   // Agents pay exactly that per call over x402. Human checkout can't take $0.01:
