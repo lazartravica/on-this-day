@@ -14,13 +14,18 @@ import { config } from "./config.js";
 let merchant: Promise<X402Merchant> | undefined;
 
 export function x402Merchant(): Promise<X402Merchant> {
-  merchant ??= createMerchant(config.facilitator).catch((error: unknown) => {
-    // The default facilitator is the one the broadcaster serves. If it is down or does not serve this
-    // chain, keep the agent rail up with `curvy-transfer` alone rather than losing it altogether.
-    if (config.facilitator !== undefined || !/facilitator/i.test(String(error))) throw error;
-    console.warn(`x402 facilitator unavailable, offering curvy-transfer only: ${String(error)}`);
-    return createMerchant(false);
-  });
+  merchant ??= createMerchant(config.facilitator)
+    .catch((error: unknown) => {
+      // The default facilitator is the one the broadcaster serves. If it is down or does not serve this
+      // chain, keep the agent rail up with `curvy-transfer` alone rather than losing it altogether.
+      if (config.facilitator !== undefined || !/facilitator/i.test(String(error))) throw error;
+      console.warn(`x402 facilitator unavailable, offering curvy-transfer only: ${String(error)}`);
+      return createMerchant(false);
+    })
+    .catch((error: unknown) => {
+      merchant = undefined;
+      throw error;
+    });
   return merchant;
 }
 
@@ -48,8 +53,5 @@ function createMerchant(facilitator: string | false | undefined): Promise<X402Me
               : (payment.error ?? "");
       console.log(`x402 ${type} ${payment.payTo} ${detail}`.trim());
     },
-  }).catch((error) => {
-    merchant = undefined;
-    throw error;
   });
 }
