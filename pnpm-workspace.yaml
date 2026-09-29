@@ -1,5 +1,6 @@
 allowBuilds:
   esbuild: true
+# Curvy publishes the SDK the same day this service picks it up; pnpm's 24h minimum-release-age
+# policy would otherwise reject the fresh version in the Docker build.
 minimumReleaseAgeExclude:
-  - '@0xcurvy/payments-sdk@0.1.1'
-  - '@0xcurvy/payments-sdk@0.1.2'
+  - '@0xcurvy/payments-sdk'
